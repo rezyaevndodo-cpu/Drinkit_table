@@ -1,0 +1,17 @@
+{
+  "name": "drinkit-omsk-table",
+  "version": "1.0.0",
+  "description": "Drinkit Омск — таблица статистики (Railway, авто-обновление 07:30 Омск)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "update": "node src/update.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "express": "^4.19.0",
+    "node-cron": "^3.0.3",
+    "googleapis": "^144.0.0",
+    "dotenv": "^16.4.0"
+  }
+}
