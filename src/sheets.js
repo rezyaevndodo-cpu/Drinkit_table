@@ -49,49 +49,26 @@ function colLetter(idx) {
 }
 
 const T = {
-  pageBg:   hex('#F5F5F7'),
+  pageBg:   hex('#EAF4FB'),   // нежно-голубой фон страницы
   surface:  hex('#FFFFFF'),
-  surfaceB: hex('#FAFAFA'),
-  text1:    hex('#1D1D1F'),
-  text2:    hex('#6E6E73'),
-  text3:    hex('#AEAEB2'),
-  brand:    hex('#FF6B00'),
-  border:   hex('#E8E8ED'),
-  borderM:  hex('#D1D1D6'),
-  groupBg:  hex('#F5F5F7'),
-  // KPI zones — backgrounds
-  zoneGreenBg:  hex('#E3F4E9'),
-  zoneYellowBg: hex('#FFF6E0'),
-  zoneRedBg:    hex('#FDE7E7'),
-  // KPI zones — text
-  zoneGreenFg:  hex('#1CA161'),
-  zoneYellowFg: hex('#E0A100'),
-  zoneRedFg:    hex('#E62E2E'),
-  // Sparkline pastel colours
-  sparkGreen:  '#7BC99B',
-  sparkRed:    '#E89B9B',
-  sparkGray:   '#C7C7CC',
+  surfaceB: hex('#F4FAFD'),   // чуть голубее для зебры
+  text1:    hex('#0F2D40'),   // глубокий сине-серый текст
+  text2:    hex('#4A6B80'),
+  text3:    hex('#9DB8C9'),
+  brand:    hex('#3BA7DD'),   // голубой Drinkit
+  border:   hex('#D6E8F2'),
+  borderM:  hex('#BBD8E8'),
+  groupBg:  hex('#DCEEF8'),   // голубая плашка группы
 };
 
+// 6 точек — мягкие оттенки голубого/бирюзового
 const UNIT_PALETTE = [
-  { bg: hex('#FFF0EE'), badge: hex('#FF6B6B') },
-  { bg: hex('#EEF5FF'), badge: hex('#4FACFE') },
-  { bg: hex('#EDFAF3'), badge: hex('#11998E') },
-  { bg: hex('#FFF0F6'), badge: hex('#F953C6') },
-  { bg: hex('#F3EEFF'), badge: hex('#8E2DE2') },
-  { bg: hex('#FFFBEE'), badge: hex('#F7971E') },
-  { bg: hex('#EEF9FF'), badge: hex('#00C6FB') },
-  { bg: hex('#F0FFF4'), badge: hex('#38EF7D') },
-  { bg: hex('#FFF5EE'), badge: hex('#FFA551') },
-  { bg: hex('#EEF0FF'), badge: hex('#6C63FF') },
-  { bg: hex('#FFEEF8'), badge: hex('#E040FB') },
-  { bg: hex('#EEFCFF'), badge: hex('#00BCD4') },
-  { bg: hex('#FFFFF0'), badge: hex('#C6B000') },
-  { bg: hex('#FFEEF0'), badge: hex('#E91E63') },
-  { bg: hex('#F0FFFC'), badge: hex('#009688') },
-  { bg: hex('#FFF3EE'), badge: hex('#FF5722') },
-  { bg: hex('#F5F0FF'), badge: hex('#673AB7') },
-  { bg: hex('#EEFFF5'), badge: hex('#00897B') },
+  { bg: hex('#E3F2FB'), badge: hex('#3BA7DD') },
+  { bg: hex('#E0F4F6'), badge: hex('#27B5C4') },
+  { bg: hex('#E8F0FC'), badge: hex('#5B8DEF') },
+  { bg: hex('#E2F6F1'), badge: hex('#1FB89A') },
+  { bg: hex('#EAF0FA'), badge: hex('#6E92D8') },
+  { bg: hex('#E0F0FB'), badge: hex('#2E9BD6') },
 ];
 
 // ─── KPI zone logic ───────────────────────────────────────────
@@ -268,7 +245,7 @@ async function resetTab(sheets, spreadsheetId, title) {
 // ─── Write one tab ────────────────────────────────────────────
 async function writeTab(sheetsClient, spreadsheetId, tabName, labels, allUnitData) {
   const sheetId  = await resetTab(sheetsClient, spreadsheetId, tabName);
-  const colCount = 1 + labels.length + 1; // +1 for sparkline
+  const colCount = 1 + labels.length; // метрика + периоды (без спарклайна)
 
   const rows     = [];
   const requests = [];
@@ -297,11 +274,10 @@ async function writeTab(sheetsClient, spreadsheetId, tabName, labels, allUnitDat
   }});
   rowIdx++;
 
-  // ── Column headers (+ sparkline column)
+  // ── Column headers (без колонки динамики)
   rows.push({ values: [
     cell('МЕТРИКА', { fontSize: 9, bgColor: T.surface, fgColor: T.text3 }),
     ...labels.map(l => cell(l, { bold: true, fontSize: 10, bgColor: T.surface, fgColor: T.text2, hAlign: 'RIGHT' })),
-    cell('ДИНАМИКА', { fontSize: 9, bgColor: T.surface, fgColor: T.text3, hAlign: 'CENTER' }),
   ]});
   borderBottom(rowIdx, BORDER_MED);
   rowIdx++;
@@ -345,110 +321,22 @@ async function writeTab(sheetsClient, spreadsheetId, tabName, labels, allUnitDat
 
       const bg    = stripe % 2 === 0 ? T.surface : T.surfaceB;
       const isRev = metric.key === 'totalRevenue';
-      const isText = metric.key === 'stopsReasons'; // текстовая метрика — нужен перенос
 
       const dataRow = [
         cell(metric.label, { fontSize: 10, bgColor: bg, fgColor: T.text1 }),
         ...periods.map(p => {
-          const val  = p.stats[metric.key];
-          const v    = val !== undefined && val !== null ? val : '—';
-          let zone = kpiZone(metric.key, v);
-
-          // Спецлогика стопов: нет стопа green, есть yellow, >1 часа red
-          if (metric.key === 'stopsDuration') {
-            const sec = p.stats.stopsDurationSec || 0;
-            if (sec === 0)        zone = 'green';
-            else if (sec > 3600)  zone = 'red';
-            else                  zone = 'yellow';
-          }
-
-          let cellBg = bg, cellFg = T.text1, cellBold = isRev;
-          if (zone === 'green')  { cellBg = T.zoneGreenBg;  cellFg = T.zoneGreenFg;  cellBold = true; }
-          if (zone === 'yellow') { cellBg = T.zoneYellowBg; cellFg = T.zoneYellowFg; cellBold = true; }
-          if (zone === 'red')    { cellBg = T.zoneRedBg;    cellFg = T.zoneRedFg;    cellBold = true; }
-
-          // Для стопов: если 0 — показываем галочку вместо прочерка
-          let displayVal = v;
-          if (metric.key === 'stopsDuration' && (v === 0 || v === '—')) {
-            displayVal = '✓';
-          }
-
-          return cell(displayVal, {
+          const val = p.stats[metric.key];
+          const v   = val !== undefined && val !== null ? val : '—';
+          // Без KPI-зон: ровный чистый стиль. Выручка — чуть жирнее.
+          return cell(v, {
             fontSize: isRev ? 11 : 10,
-            bold: cellBold,
-            bgColor: cellBg,
-            fgColor: cellFg,
-            hAlign: isText ? 'LEFT' : 'RIGHT',
-            overflow: isText,
+            bold: isRev,
+            bgColor: bg,
+            fgColor: v === '—' ? T.text3 : T.text1,
+            hAlign: 'RIGHT',
           });
         }),
       ];
-
-      // Текстовые метрики (время, проценты, рейтинги) — SPARKLINE даёт #N/A.
-      // Для них показываем стрелку тренда вместо графика.
-      const textMetrics = [
-        'trackingTime', 'serviceTime',
-        'mobilePercent', 'writeOffPercent',
-        'menuAvailability',
-      ];
-      const isTextMetric = textMetrics.indexOf(metric.key) !== -1;
-
-      // Sparkline cell — определяем тренд и цвет
-      const numVals = periods.map(p => numericValue(metric.key, p.stats[metric.key])).filter(x => x !== null);
-      let sparkCell;
-
-      if (isTextMetric && numVals.length >= 2) {
-        // Стрелка тренда вместо графика
-        const first = numVals[0], last = numVals[numVals.length - 1];
-        const changePct = first !== 0 ? (last - first) / Math.abs(first) * 100 : 0;
-        let arrow = '→', sparkColor = T.sparkGray;
-        if (Math.abs(changePct) >= 3) {
-          let improving = last > first;
-          if (lowerIsBetter(metric.key)) improving = last < first;
-          arrow = improving ? '↗' : '↘';
-          sparkColor = improving ? T.sparkGreen : T.sparkRed;
-        }
-        sparkCell = {
-          userEnteredValue: { stringValue: arrow },
-          userEnteredFormat: {
-            backgroundColor: bg,
-            horizontalAlignment: 'CENTER',
-            verticalAlignment: 'MIDDLE',
-            textFormat: {
-              bold: true, fontSize: 14,
-              fontFamily: 'Google Sans',
-              foregroundColor: hex(sparkColor),
-            },
-            padding: { top: 3, right: 6, bottom: 3, left: 6 },
-          },
-        };
-      } else if (!isTextMetric && numVals.length >= 2) {
-        const first = numVals[0], last = numVals[numVals.length - 1];
-        const changePct = first !== 0 ? (last - first) / Math.abs(first) * 100 : 0;
-        let sparkColor = T.sparkGray;
-        if (Math.abs(changePct) >= 3) {
-          let improving = last > first;
-          if (lowerIsBetter(metric.key)) improving = last < first;
-          sparkColor = improving ? T.sparkGreen : T.sparkRed;
-        }
-        // Передаём числа НАПРЯМУЮ в формулу (не ссылку на диапазон ячеек),
-        // чтобы строковые значения '—' в пустых периодах не ломали SPARKLINE.
-        const dataLiteral = '{' + numVals.map(n => String(n)).join(';') + '}';
-        var optsArr = '{"charttype","column";"color","' + sparkColor + '"}';
-        const formula  = '=SPARKLINE(' + dataLiteral + ',' + optsArr + ')';
-        sparkCell = {
-          userEnteredValue: { formulaValue: formula },
-          userEnteredFormat: {
-            backgroundColor: bg,
-            horizontalAlignment: 'CENTER',
-            verticalAlignment: 'MIDDLE',
-            padding: { top: 3, right: 6, bottom: 3, left: 6 },
-          },
-        };
-      } else {
-        sparkCell = filler(bg);
-      }
-      dataRow.push(sparkCell);
 
       rows.push({ values: dataRow });
       borderBottom(rowIdx);
@@ -553,8 +441,7 @@ async function writeTab(sheetsClient, spreadsheetId, tabName, labels, allUnitDat
       { updateDimensionProperties: { range: { sheetId, dimension: 'ROWS', startIndex: 1, endIndex: 2 }, properties: { pixelSize: 30 }, fields: 'pixelSize' }},
       { updateDimensionProperties: { range: { sheetId, dimension: 'ROWS', startIndex: 2, endIndex: rowIdx }, properties: { pixelSize: 24 }, fields: 'pixelSize' }},
       { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 250 }, fields: 'pixelSize' }},
-      { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: 1 + dataCols }, properties: { pixelSize: 115 }, fields: 'pixelSize' }},
-      { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 1 + dataCols, endIndex: colCount }, properties: { pixelSize: 110 }, fields: 'pixelSize' }},
+      { updateDimensionProperties: { range: { sheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: colCount }, properties: { pixelSize: 115 }, fields: 'pixelSize' }},
     ]},
   });
 
