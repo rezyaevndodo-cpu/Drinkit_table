@@ -45,11 +45,13 @@ async function get(url, token, retries) {
   return null;
 }
 
-// Причины списаний → группы
-const REASON_EXPIRED   = ['Expired', 'ExpiredShowcaseTime'];
-const REASON_DEFECT    = ['Defected', 'DamagedPackaging'];
-const REASON_HUMAN     = ['HumanElement'];
-const REASON_MARKETING = ['Marketing'];
+// Причины списаний Drinkit → группы
+const R_TESTING    = ['DrinkitEmployeeTesting'];
+const R_PRODUCTION = ['DrinkitProductionNeeds'];
+const R_TRAINING   = ['DrinkitStaffTraining'];
+const R_REMAKE     = ['DrinkitRemakeForGuest'];
+const R_MARKETING  = ['Marketing'];
+const R_QUALITY    = ['ManufactureQualityControl', 'DrinkitMenuDevelopment'];
 
 async function getUnitStats(token, unitId, fromDate, toDate) {
   const stats = {};
@@ -109,24 +111,28 @@ async function getUnitStats(token, unitId, fromDate, toDate) {
     const d = await get(`${API_DRINKIT}/accounting/write-offs/products?units=${u}&from=${fmtOmsk(wideFrom)}&to=${fmtOmsk(wideTo)}&take=1000`, token);
     const fromLocal = new Date(fromDate.getTime() + 6 * 3600000);
     const toLocal   = new Date(toDate.getTime() + 6 * 3600000);
-    let total = 0, exp = 0, def = 0, hum = 0, mkt = 0;
+    let total = 0, testing = 0, production = 0, training = 0, remake = 0, mkt = 0, quality = 0;
     (d?.writeOffs || []).forEach(w => {
       if (!w.writtenOffAtLocal) return;
       const dt = new Date(w.writtenOffAtLocal + 'Z');
       if (dt < fromLocal || dt >= toLocal) return;
       const rub = (w.pricePerPiece || 0) * (w.quantity || 0);
-      total += rub;
-      if (REASON_EXPIRED.includes(w.reason))   exp += rub;
-      if (REASON_DEFECT.includes(w.reason))    def += rub;
-      if (REASON_HUMAN.includes(w.reason))     hum += rub;
-      if (REASON_MARKETING.includes(w.reason)) mkt += rub;
+      total += rub; // всего = ВСЕ причины, чтобы билось с суммой
+      if (R_TESTING.includes(w.reason))    testing += rub;
+      if (R_PRODUCTION.includes(w.reason)) production += rub;
+      if (R_TRAINING.includes(w.reason))   training += rub;
+      if (R_REMAKE.includes(w.reason))     remake += rub;
+      if (R_MARKETING.includes(w.reason))  mkt += rub;
+      if (R_QUALITY.includes(w.reason))    quality += rub;
     });
-    stats.writeOffTotal     = Math.round(total);
-    stats.writeOffExpired   = Math.round(exp);
-    stats.writeOffDefect    = Math.round(def);
-    stats.writeOffHuman     = Math.round(hum);
-    stats.writeOffMarketing = Math.round(mkt);
-    stats.writeOffPercent   = sales > 0 ? `${Math.round(total / sales * 1000) / 10}%` : '0%';
+    stats.writeOffTotal   = Math.round(total);
+    stats.woTesting       = Math.round(testing);
+    stats.woProduction    = Math.round(production);
+    stats.woTraining      = Math.round(training);
+    stats.woRemake        = Math.round(remake);
+    stats.woMarketing     = Math.round(mkt);
+    stats.woQuality       = Math.round(quality);
+    stats.writeOffPercent = sales > 0 ? `${Math.round(total / sales * 1000) / 10}%` : '0%';
   }
 
   // 6. Доступность меню + продуктов в стопе (формула по рабочему времени)

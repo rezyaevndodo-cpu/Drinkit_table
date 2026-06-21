@@ -95,8 +95,8 @@ function parsePct(v) {
 
 // Метрики где снижение = улучшение (списания, время)
 function lowerIsBetter(metricKey) {
-  return ['writeOffTotal','writeOffExpired','writeOffDefect','writeOffHuman',
-          'writeOffMarketing','writeOffPercent','trackingTime','serviceTime',
+  return ['writeOffTotal','woTesting','woProduction','woTraining','woRemake',
+          'woMarketing','woQuality','writeOffPercent','trackingTime','serviceTime',
           'stoppedProducts'].indexOf(metricKey) !== -1;
 }
 

@@ -53,17 +53,19 @@ const METRICS = [
   { group: 'Меню',          key: 'stoppedProducts',  label: 'Продуктов в стопе',              fmt: 'int'   },
   { group: 'Списания',      key: 'writeOffTotal',    label: 'Списаний всего, ₽',              fmt: 'money' },
   { group: 'Списания',      key: 'writeOffPercent',  label: '% списаний от выручки',          fmt: 'pct'   },
-  { group: 'Списания',      key: 'writeOffExpired',  label: 'Списание — срок, ₽',             fmt: 'money' },
-  { group: 'Списания',      key: 'writeOffDefect',   label: 'Списание — порча, ₽',            fmt: 'money' },
-  { group: 'Списания',      key: 'writeOffHuman',    label: 'Списание — чел. фактор, ₽',      fmt: 'money' },
-  { group: 'Списания',      key: 'writeOffMarketing',label: 'Списание — маркетинг, ₽',        fmt: 'money' },
+  { group: 'Списания',      key: 'woTesting',        label: 'Списание — тестирование, ₽',     fmt: 'money' },
+  { group: 'Списания',      key: 'woProduction',     label: 'Списание — производство, ₽',     fmt: 'money' },
+  { group: 'Списания',      key: 'woTraining',       label: 'Списание — обучение, ₽',         fmt: 'money' },
+  { group: 'Списания',      key: 'woRemake',         label: 'Списание — переделка гостю, ₽',  fmt: 'money' },
+  { group: 'Списания',      key: 'woMarketing',      label: 'Списание — маркетинг, ₽',        fmt: 'money' },
+  { group: 'Списания',      key: 'woQuality',        label: 'Списание — контроль качества, ₽',fmt: 'money' },
 ];
 
 // Какие метрики суммируются для «Вся сеть», какие усредняются
 const SUM_KEYS = [
   'totalRevenue', 'mobileRevenue', 'totalOrders', 'mobileOrders', 'laborHours',
-  'stoppedProducts', 'writeOffTotal', 'writeOffExpired', 'writeOffDefect',
-  'writeOffHuman', 'writeOffMarketing',
+  'stoppedProducts', 'writeOffTotal',
+  'woTesting', 'woProduction', 'woTraining', 'woRemake', 'woMarketing', 'woQuality',
 ];
 const AVG_KEYS = [
   'avgCheck', 'salesPerLaborHour', 'productsPerLaborHour',
