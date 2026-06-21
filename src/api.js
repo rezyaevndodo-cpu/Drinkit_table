@@ -18,7 +18,7 @@ function formatDur(sec) {
 }
 
 async function get(url, token, retries) {
-  retries = retries === undefined ? 3 : retries;
+  retries = retries === undefined ? 5 : retries;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const r = await axios.get(url, {
@@ -28,6 +28,12 @@ async function get(url, token, retries) {
       if (r.status === 200) return r.data;
       if (r.status === 429 && attempt < retries) { await sleep(2000 * (attempt + 1)); continue; }
       if (r.status >= 500 && attempt < retries) { await sleep(1000 * (attempt + 1)); continue; }
+      // 403 NoAccessToUnit у Drinkit бывает ВРЕМЕННЫМ (мигает при живом доступе).
+      // Повторяем с паузой, а не считаем за «нет данных».
+      if (r.status === 403 && attempt < retries) {
+        const code = r.data && (r.data.code || r.data.Code);
+        if (code === 'NoAccessToUnit') { await sleep(1500 * (attempt + 1)); continue; }
+      }
       console.warn(`[api] HTTP ${r.status} ${url.slice(0, 90)}`);
       return null;
     } catch (e) {
@@ -93,20 +99,6 @@ async function getUnitStats(token, unitId, fromDate, toDate) {
     if (oh) {
       stats.trackingTime = formatDur(oh.avgTrackingPendingTime || 0);
       stats.serviceTime  = formatDur(oh.avgOrderHandoverTime || 0);
-    }
-  }
-
-  // 4. Ratings — рейтинг клиентов, доля оценённых (может быть пусто)
-  {
-    const fd = new Date(fromDate.getTime() + 6 * 3600000).toISOString().slice(0, 10);
-    const td = new Date(toDate.getTime() + 6 * 3600000).toISOString().slice(0, 10);
-    const d = await get(`https://api.dodois.io/controlling/ratings/customer-experience/history?units=${u}&fromDate=${fd}&toDate=${td}&take=50`, token);
-    const rates = (d?.unitRates || []).filter(x => x.unitId && x.unitId.toLowerCase() === u);
-    if (rates.length) {
-      // берём последний доступный рейтинг периода
-      const last = rates[rates.length - 1];
-      if (last.rate != null) stats.rateCustomerExp = parseFloat(Number(last.rate).toFixed(2));
-      if (last.ratedOrdersShare != null) stats.rateShare = `${Math.round(last.ratedOrdersShare * 1000) / 10}%`;
     }
   }
 

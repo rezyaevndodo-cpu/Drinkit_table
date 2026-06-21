@@ -388,8 +388,8 @@ async function writeTab(sheetsClient, spreadsheetId, tabName, labels, allUnitDat
       // Для них показываем стрелку тренда вместо графика.
       const textMetrics = [
         'trackingTime', 'serviceTime',
-        'mobilePercent', 'rateShare', 'writeOffPercent',
-        'menuAvailability', 'rateCustomerExp',
+        'mobilePercent', 'writeOffPercent',
+        'menuAvailability',
       ];
       const isTextMetric = textMetrics.indexOf(metric.key) !== -1;
 
@@ -431,11 +431,11 @@ async function writeTab(sheetsClient, spreadsheetId, tabName, labels, allUnitDat
           if (lowerIsBetter(metric.key)) improving = last < first;
           sparkColor = improving ? T.sparkGreen : T.sparkRed;
         }
-        const rowNum   = rowIdx + 1;
-        const firstCol = colLetter(1);
-        const lastCol  = colLetter(dataCols);
+        // Передаём числа НАПРЯМУЮ в формулу (не ссылку на диапазон ячеек),
+        // чтобы строковые значения '—' в пустых периодах не ломали SPARKLINE.
+        const dataLiteral = '{' + numVals.map(n => String(n)).join(';') + '}';
         var optsArr = '{"charttype","column";"color","' + sparkColor + '"}';
-        const formula  = '=SPARKLINE(' + firstCol + rowNum + ':' + lastCol + rowNum + ',' + optsArr + ')';
+        const formula  = '=SPARKLINE(' + dataLiteral + ',' + optsArr + ')';
         sparkCell = {
           userEnteredValue: { formulaValue: formula },
           userEnteredFormat: {

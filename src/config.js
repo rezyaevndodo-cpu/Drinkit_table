@@ -49,8 +49,6 @@ const METRICS = [
   { group: 'Производительность', key: 'productsPerLaborHour',label: 'Продуктивность (прод./час)',fmt: 'num1'  },
   { group: 'Скорость',      key: 'trackingTime',     label: 'Время ожидания на трекинге',     fmt: 'time'  },
   { group: 'Скорость',      key: 'serviceTime',      label: 'Сервисное время',                fmt: 'time'  },
-  { group: 'Качество',      key: 'rateCustomerExp',  label: 'Рейтинг клиентов',               fmt: 'rate'  },
-  { group: 'Качество',      key: 'rateShare',        label: 'Доля оценённых заказов, %',      fmt: 'pct'   },
   { group: 'Меню',          key: 'menuAvailability', label: 'Доступность меню, %',            fmt: 'pct'   },
   { group: 'Меню',          key: 'stoppedProducts',  label: 'Продуктов в стопе',              fmt: 'int'   },
   { group: 'Списания',      key: 'writeOffTotal',    label: 'Списаний всего, ₽',              fmt: 'money' },
@@ -69,10 +67,10 @@ const SUM_KEYS = [
 ];
 const AVG_KEYS = [
   'avgCheck', 'salesPerLaborHour', 'productsPerLaborHour',
-  'rateCustomerExp', 'menuAvailability',
+  'menuAvailability',
 ];
 const AVG_TIME_KEYS = [ 'trackingTime', 'serviceTime' ];
-const AVG_PCT_KEYS  = [ 'mobilePercent', 'rateShare', 'writeOffPercent' ];
+const AVG_PCT_KEYS  = [ 'mobilePercent', 'writeOffPercent' ];
 
 module.exports = {
   API_BASE, API_DRINKIT,
