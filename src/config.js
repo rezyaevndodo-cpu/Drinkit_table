@@ -12,7 +12,18 @@ const API_DRINKIT  = `${API_BASE}/drinkit/ru`;
 // ============================================================
 const CLIENT_ID     = process.env.DODO_CLIENT_ID;      // cpmmr
 const CLIENT_SECRET = process.env.DODO_CLIENT_SECRET;
-let   REFRESH_TOKEN = process.env.DODO_REFRESH_TOKEN;
+// DODO_REFRESH_TOKEN из .env/Railway используется только как "бутстрап"-значение
+// при самом первом запуске. После первого успешного обновления актуальный
+// refresh_token хранится durable — в скрытой вкладке "_auth" Google Таблицы
+// (см. src/tokenStore.js), это переживает рестарты/редеплои Railway (раньше
+// refresh_token жил только в памяти процесса и "сгорал" при каждом рестарте —
+// именно так один раз уже "падала" таблица Dodo Омск).
+let REFRESH_TOKEN = process.env.DODO_REFRESH_TOKEN;
+
+const DODO_ACCOUNT_BASE = process.env.DODO_ACCOUNT_BASE || 'https://auth.dodois.io';
+const DODO_REDIRECT_URI = process.env.DODO_REDIRECT_URI || 'https://localhost:5001';
+const DODO_SCOPE = process.env.DODO_SCOPE ||
+  'sales shared incentives deliverystatistics productionefficiency stopsales orders production accounting accounting:read staffshifts:read offline_access';
 
 // ============================================================
 // Точки Drinkit Омск (6 шт)
@@ -47,6 +58,7 @@ const METRICS = [
   { group: 'Производительность', key: 'laborHours',          label: 'Часы кухни',                fmt: 'hours' },
   { group: 'Производительность', key: 'salesPerLaborHour',   label: 'Производительность, ₽/час', fmt: 'money' },
   { group: 'Производительность', key: 'productsPerLaborHour',label: 'Продуктивность (прод./час)',fmt: 'num1'  },
+  { group: 'Производительность', key: 'kcPercent',           label: 'KitchenCost, %',             fmt: 'pct1'  },
   { group: 'Скорость',      key: 'trackingTime',     label: 'Время ожидания на трекинге',     fmt: 'time'  },
   { group: 'Скорость',      key: 'serviceTime',      label: 'Сервисное время',                fmt: 'time'  },
   { group: 'Меню',          key: 'menuAvailability', label: 'Доступность меню, %',            fmt: 'pct'   },
@@ -69,14 +81,17 @@ const SUM_KEYS = [
 ];
 const AVG_KEYS = [
   'avgCheck', 'salesPerLaborHour', 'productsPerLaborHour',
-  'menuAvailability',
+  'menuAvailability', 'kcPercent',
 ];
 const AVG_TIME_KEYS = [ 'trackingTime', 'serviceTime' ];
 const AVG_PCT_KEYS  = [ 'mobilePercent', 'writeOffPercent' ];
 
 module.exports = {
   API_BASE, API_DRINKIT,
-  CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
+  CLIENT_ID, CLIENT_SECRET,
+  DODO_ACCOUNT_BASE, DODO_REDIRECT_URI, DODO_SCOPE,
+  get REFRESH_TOKEN() { return REFRESH_TOKEN; },
+  set REFRESH_TOKEN(v) { REFRESH_TOKEN = v; },
   UNITS, MENU_SIZE, WORK_START_HOUR, WORK_END_HOUR,
   METRICS, SUM_KEYS, AVG_KEYS, AVG_TIME_KEYS, AVG_PCT_KEYS,
 };

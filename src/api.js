@@ -135,6 +135,22 @@ async function getUnitStats(token, unitId, fromDate, toDate) {
     stats.writeOffPercent = sales > 0 ? `${Math.round(total / sales * 1000) / 10}%` : '0%';
   }
 
+  // 5а. KitchenCost = ФОТ кухни / выручка * 100 * 1.62 (районный коэффициент Омск).
+  // Требует scope "incentives" для клиента cpmmr (включается на developer.dodois.io).
+  {
+    const d = await get(
+      `${API_DRINKIT}/staff/incentives-by-members?units=${u}&from=${f}&to=${t}&staffTypes=KitchenMember`, token
+    );
+    const members = d?.staffMembers || [];
+    let fot = 0;
+    members.forEach(m => { fot += (m.totalIncentives || 0); });
+    if (sales > 0 && fot > 0) {
+      stats.kcPercent = parseFloat((fot / sales * 100 * 1.62).toFixed(1));
+    } else {
+      stats.kcPercent = 0;
+    }
+  }
+
   // 6. Доступность меню + продуктов в стопе (формула по рабочему времени)
   {
     // Рабочие границы периода в UTC

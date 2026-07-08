@@ -48,27 +48,31 @@ function colLetter(idx) {
   return s;
 }
 
+// Design A — «Нейтральный + синий акцент» (Apple-style: почти белый холст,
+// синий используется точечно — как акцент верхней полосы и бейджей точек,
+// а не как сплошная заливка всей таблицы).
 const T = {
-  pageBg:   hex('#EAF4FB'),   // нежно-голубой фон страницы
+  pageBg:   hex('#F5F5F7'),
   surface:  hex('#FFFFFF'),
-  surfaceB: hex('#F4FAFD'),   // чуть голубее для зебры
-  text1:    hex('#0F2D40'),   // глубокий сине-серый текст
-  text2:    hex('#4A6B80'),
-  text3:    hex('#9DB8C9'),
-  brand:    hex('#3BA7DD'),   // голубой Drinkit
-  border:   hex('#D6E8F2'),
-  borderM:  hex('#BBD8E8'),
-  groupBg:  hex('#DCEEF8'),   // голубая плашка группы
+  surfaceB: hex('#FAFAFB'),   // едва заметная зебра, нейтральная (не голубая)
+  text1:    hex('#1D1D1F'),
+  text2:    hex('#6E6E73'),
+  text3:    hex('#AEAEB2'),
+  brand:    hex('#0A84FF'),   // синий — акцент (верхняя полоса, шапка)
+  border:   hex('#E5E5EA'),
+  borderM:  hex('#D1D1D6'),
+  groupBg:  hex('#F0F0F2'),   // нейтральная плашка группы (не голубая)
 };
 
-// 6 точек — мягкие оттенки голубого/бирюзового
+// 6 точек Drinkit — у каждой свой акцентный оттенок (Apple system colors),
+// вместо единой голубой заливки для всех.
 const UNIT_PALETTE = [
-  { bg: hex('#E3F2FB'), badge: hex('#3BA7DD') },
-  { bg: hex('#E0F4F6'), badge: hex('#27B5C4') },
-  { bg: hex('#E8F0FC'), badge: hex('#5B8DEF') },
-  { bg: hex('#E2F6F1'), badge: hex('#1FB89A') },
-  { bg: hex('#EAF0FA'), badge: hex('#6E92D8') },
-  { bg: hex('#E0F0FB'), badge: hex('#2E9BD6') },
+  { bg: hex('#EAF4FF'), badge: hex('#0A84FF') }, // синий
+  { bg: hex('#E8FBFA'), badge: hex('#20B8B0') }, // бирюзовый
+  { bg: hex('#EFECFE'), badge: hex('#7B6EF6') }, // индиго
+  { bg: hex('#E7FBF4'), badge: hex('#12B886') }, // мятный
+  { bg: hex('#EAF6FF'), badge: hex('#3AA0E8') }, // голубой
+  { bg: hex('#F2F2F5'), badge: hex('#8E8E93') }, // графит
 ];
 
 // ─── KPI zone logic ───────────────────────────────────────────
@@ -490,4 +494,4 @@ async function writeToSheets(periods, statsMap) {
   }
 }
 
-module.exports = { writeToSheets };
+module.exports = { writeToSheets, getAuth };
